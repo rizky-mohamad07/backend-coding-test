@@ -112,6 +112,11 @@ Please implement the following security controls for your system:
    1. Changes to the code
    2. Tests ensuring the vulnerability is addressed
 
+Solution :
+
+1. Refactor the SQL Query in GET /rides/{id} to use placeholders
+2. Implement Helmet Middleware to improve security
+
 ### Load Testing
 
 Please implement load testing to ensure your service can handle a high amount of traffic
