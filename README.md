@@ -95,6 +95,10 @@ Please implement the following refactors of the code:
    1. Code changes
    2. Tests
 
+Solution:
+Refactor the endpoints to Async/Await instead of callback style
+Reduce the complexity of parameter validation and DB Operation by separating it to it's own module
+
 ### Security
 
 Please implement the following security controls for your system:

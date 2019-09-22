@@ -9,8 +9,8 @@ const bodyParser = require('body-parser');
 
 const jsonParser = bodyParser.json();
 
-const sqlite = require('sqlite3').verbose();
-const db = new sqlite.Database(':memory:');
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database(':memory:');
 
 const buildSchemas = require('./src/schemas');
 
