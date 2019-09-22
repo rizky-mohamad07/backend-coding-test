@@ -1,0 +1,214 @@
+openapi: 3.0.0
+info:
+  title: Rides API Service
+  description: This is a Node.js Express Backend API for Create Ride Data, Get a Ride Data and Get All Ride Data
+  version: 0.0.1
+servers:
+  - url: http://localhost:8010
+    description: Local server for development purposes
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: should return HTTP code 200 if the service is healthy
+      responses:
+        "200":
+          description: "Healthy"
+  /rides:
+    post:
+      summary: Post a Ride Data
+      description: This is used to add new ride data
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RidesRequest"
+      responses:
+        "200":
+          description: This endpoint returned HTTP code 200 whether the Ride Data Creation is successfull or not, please check the response body for further information
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RidesResponse"
+                  - $ref: "#/components/schemas/ApiResultError"
+              examples:
+                success:
+                  summary: Ride Data creation successfull
+                  value:
+                    rideID: 1
+                    start_lat: 10
+                    start_long: 10
+                    end_lat: 10
+                    end_long: 10
+                    rider_name: "Rizky"
+                    driver_name: "Eddy"
+                    driver_vehicle: "Yamaha"
+                    created: "2019-09-22 08:49:55"
+                validationError:
+                  summary: There are invalid parameters in request body
+                  value:
+                    errorCode: "VALIDATION_ERROR"
+                    errorMsg: "Start latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively"
+                serverError:
+                  summary: Something wrong happened when creating ride data
+                  value:
+                    errorCode: "SERVER_ERROR"
+                    errorMsg: "Unknown error"
+    get:
+      summary: Get all Ride Data
+      description:
+      responses:
+        "200":
+          description: This endpoint returned HTTP code 200 whether the fetching of Rides Data is successfull or not, please check the response body for further information
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RidesListResponse"
+                  - $ref: "#/components/schemas/ApiResultError"
+              examples:
+                success:
+                  summary: Rides Data fetching successfull
+                  value:
+                    - rideID: 1
+                      start_lat: 10
+                      start_long: 10
+                      end_lat: 10
+                      end_long: 10
+                      rider_name: "Rizky"
+                      driver_name: "Eddy"
+                      driver_vehicle: "Yamaha"
+                      created: "2019-09-22 08:49:55"
+                notFoundError:
+                  summary: There are no rides data found
+                  value:
+                    errorCode: "RIDES_NOT_FOUND_ERROR"
+                    errorMsg: "Could not find any rides"
+                serverError:
+                  summary: Something wrong happened when creating ride data
+                  value:
+                    errorCode: "SERVER_ERROR"
+                    errorMsg: "Unknown error"
+  /rides/{id}:
+    get:
+      summary: Get a specific Ride data based on ID
+      description: This is used to add new ride data
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The ride ID
+      responses:
+        "200":
+          description: This endpoint returned HTTP code 200 whether the Ride Data fetching is successfull or not, please check the response body for further information
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RidesListResponse"
+                  - $ref: "#/components/schemas/ApiResultError"
+              examples:
+                success:
+                  summary: Ride Data fetching successfull
+                  value:
+                    - rideID: 1
+                      start_lat: 10
+                      start_long: 10
+                      end_lat: 10
+                      end_long: 10
+                      rider_name: "Rizky"
+                      driver_name: "Eddy"
+                      driver_vehicle: "Yamaha"
+                      created: "2019-09-22 08:49:55"
+                notFoundError:
+                  summary: There are no rides data found
+                  value:
+                    errorCode: "RIDES_NOT_FOUND_ERROR"
+                    errorMsg: "Could not find any rides"
+                serverError:
+                  summary: Something wrong happened when creating ride data
+                  value:
+                    errorCode: "SERVER_ERROR"
+                    errorMsg: "Unknown error"
+
+components:
+  schemas:
+    RidesRequest:
+      type: object
+      properties:
+        start_lat:
+          type: number
+          example: 10
+        start_long:
+          type: number
+          example: 10
+        end_lat:
+          type: number
+          example: 10
+        end_long:
+          type: number
+          example: 10
+        rider_name:
+          type: string
+          example: "Rizky"
+        driver_name:
+          type: string
+          example: "Eddy"
+        driver_vehicle:
+          type: string
+          example: "Car"
+      required:
+        - start_lat
+        - start_long
+        - end_lat
+        - end_long
+        - rider_name
+        - driver_name
+        - driver_vehicle
+
+    RidesResponse:
+      type: object
+      properties:
+        rideID:
+          type: integer
+          example: 1
+        start_long:
+          type: number
+          example: 10
+        end_lat:
+          type: number
+          example: 10
+        end_long:
+          type: number
+          example: 10
+        rider_name:
+          type: string
+          example: "Rizky"
+        driver_name:
+          type: string
+          example: "Eddy"
+        driver_vehicle:
+          type: string
+          example: "Car"
+        created:
+          type: string
+          format: date-time
+
+    RidesListResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/RidesResponse"
+
+    ApiResultError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          example: "00002"
+        message:
+          type: string
+          example: "duplicated account already exist"

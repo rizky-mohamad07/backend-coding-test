@@ -16,6 +16,12 @@ The goal of these exercises are to assess your proficiency in software engineeri
 Below will be your set of tasks to accomplish. Please work on each of these tasks in order. Success criteria will be defined clearly for each task
 
 1. [Documentation](#documentation)
+Solution : 
+Using swagger-ui-express and a separate apiDoc.yaml file. the documentation can be served by simply running `npm run serve-doc` command.
+the documentation then can be accessible on `localhost:8000`
+
+You can also generate static web file of the documentation by running `npx redoc-cli bundle -o index.html apiDoc.yaml`
+the resulting HTML file can then be hosted online
 2. [Implement Tooling](#implement-tooling)
 3. [Implement Pagination](#implement-pagination)
 4. [Refactoring](#refactoring)
