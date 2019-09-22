@@ -16,18 +16,55 @@ The goal of these exercises are to assess your proficiency in software engineeri
 Below will be your set of tasks to accomplish. Please work on each of these tasks in order. Success criteria will be defined clearly for each task
 
 1. [Documentation](#documentation)
-   Solution :
-   Using swagger-ui-express and a separate apiDoc.yaml file. the documentation can be served by simply running `npm run serve-doc` command.
-   the documentation then can be accessible on `localhost:8000`
+
+Solution :
+
+Using swagger-ui-express and a separate apiDoc.yaml file. the documentation can be served by simply running `npm run serve-doc` command.
+the documentation then can be accessible on `localhost:8000`
 
 You can also generate static web file of the documentation by running `npx redoc-cli bundle -o index.html apiDoc.yaml`
 the resulting HTML file can then be hosted online
 
 2. [Implement Tooling](#implement-tooling)
+
+Solution :
+
+- Code Style checking is enforced with eslint and prettier with airbnb guidelines
+- nyc is implemented and linked to mocha test via new npm eescript in `coverage` and `coverage-report` to get the generated HTML coverage report
+- pre-push is implemented and connected to nyc coverage threshold described in `.nyrc` file
+- winston is implemented with daily rotated log files, seperated by combined and error level only
+- repository is integrated to Travis CI
+
 3. [Implement Pagination](#implement-pagination)
+
+Solution :
+
+Implemented the pagination utilizing 2 SQL query. one for the Rides data and one for the Total Count of Rides
+
 4. [Refactoring](#refactoring)
+
+Solution:
+
+Refactor the endpoints to Async/Await instead of callback style
+Reduce the complexity of parameter validation and DB Operation by separating it to it's own module
+
 5. [Security](#security)
+
+Solution :
+
+- Refactor the SQL Query in GET /rides/{id} to use placeholders
+- Implement Helmet Middleware to improve security
+
 6. [Load Testing](#load-testing)
+
+Solution :
+Added Artillery Load testing configuration for all endpoints
+Utilized npm-run-all to run the load testing processes sequentially with this order :
+
+- Start Service with Forever
+- Start Load Testing with Artillery
+- Start Generating Load Testing Report with Artillery
+- Stop all Forever process
 
 ### Documentation
 
@@ -60,14 +97,6 @@ Please implement the following tooling:
 5. **[BONUS]** Add integration to CI such as Travis or Circle
 6. **[BONUS]** Add Typescript support
 
-Solution :
-
-1. Code Style checking is enforced with eslint and prettier with airbnb guidelines
-2. nyc is implemented and linked to mocha test via new npm eescript in `coverage` and `coverage-report` to get the generated HTML coverage report
-3. pre-push is implemented and connected to nyc coverage threshold described in `.nyrc` file
-4. winston is implemented with daily rotated log files, seperated by combined and error level only
-5. repository is integrated to Travis CI
-
 ### Implement Pagination
 
 Please implement pagination to retrieve pages of the resource `rides`.
@@ -77,9 +106,6 @@ Please implement pagination to retrieve pages of the resource `rides`.
    2. Tests
    3. Documentation
 2. Merge the pull request
-
-Solution :
-Implemented the pagination utilizing 2 SQL query. one for the Rides data and one for the Total Count of Rides
 
 ### Refactoring
 
@@ -95,10 +121,6 @@ Please implement the following refactors of the code:
    1. Code changes
    2. Tests
 
-Solution:
-Refactor the endpoints to Async/Await instead of callback style
-Reduce the complexity of parameter validation and DB Operation by separating it to it's own module
-
 ### Security
 
 Please implement the following security controls for your system:
@@ -112,11 +134,6 @@ Please implement the following security controls for your system:
    1. Changes to the code
    2. Tests ensuring the vulnerability is addressed
 
-Solution :
-
-1. Refactor the SQL Query in GET /rides/{id} to use placeholders
-2. Implement Helmet Middleware to improve security
-
 ### Load Testing
 
 Please implement load testing to ensure your service can handle a high amount of traffic
@@ -127,12 +144,3 @@ Please implement load testing to ensure your service can handle a high amount of
    1. Create a PR against `master` of your fork including artillery
    2. Ensure that load testing is able to be run using `npm test:load`. You can consider using a tool like `forever` to spin up a daemon and kill it after the load test has completed.
    3. Test all endpoints under at least `100 rps` for `30s` and ensure that `p99` is under `50ms`
-
-Solution :
-Added Artillery Load testing configuration for all endpoints
-Utilized npm-run-all to run the load testing processes sequentially with this order :
-
-1. Start Service with Forever
-2. Start Load Testing with Artillery
-3. Start Generating Load Testing Report with Artillery
-4. Stop all Forever process
