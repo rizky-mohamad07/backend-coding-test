@@ -56,8 +56,24 @@ paths:
                     errorCode: "SERVER_ERROR"
                     errorMsg: "Unknown error"
     get:
-      summary: Get all Ride Data
-      description:
+      summary: Get all Rides Data with pagination
+      description: This is used to get rides data with pagination. total count is also provided in the response
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: true
+          minimum: 1
+          description: The ride list current page
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: true
+          minimum: 1
+          maximum: 50
+          description: The ride list number of data per page
       responses:
         "200":
           description: This endpoint returned HTTP code 200 whether the fetching of Rides Data is successfull or not, please check the response body for further information
@@ -71,15 +87,19 @@ paths:
                 success:
                   summary: Rides Data fetching successfull
                   value:
-                    - rideID: 1
-                      start_lat: 10
-                      start_long: 10
-                      end_lat: 10
-                      end_long: 10
-                      rider_name: "Rizky"
-                      driver_name: "Eddy"
-                      driver_vehicle: "Yamaha"
-                      created: "2019-09-22 08:49:55"
+                    page: 1
+                    limit: 10
+                    count: 3
+                    data:
+                      - rideID: 1
+                        start_lat: 10
+                        start_long: 10
+                        end_lat: 10
+                        end_long: 10
+                        rider_name: "Rizky"
+                        driver_name: "Eddy"
+                        driver_vehicle: "Yamaha"
+                        created: "2019-09-22 08:49:55"
                 notFoundError:
                   summary: There are no rides data found
                   value:
@@ -109,7 +129,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/RidesListResponse"
+                  - $ref: "#/components/schemas/RideDetailResponse"
                   - $ref: "#/components/schemas/ApiResultError"
               examples:
                 success:
@@ -199,10 +219,25 @@ components:
           format: date-time
 
     RidesListResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 3
+        count:
+          type: integer
+          example: 10
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RidesResponse"
+    RideDetailResponse:
       type: array
       items:
         $ref: "#/components/schemas/RidesResponse"
-
     ApiResultError:
       type: object
       properties:
