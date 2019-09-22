@@ -2,7 +2,7 @@ config:
   target: 'http://localhost:8010'
   phases:
     - duration: 60
-      arrivalRate: 150
+      arrivalRate: 50
   defaults:
     headers:
       x-my-service-auth: '987401838271002188298567'
@@ -19,6 +19,6 @@ scenarios:
             driver_name: 'Eddy'
             driver_vehicle: 'Yamaha'
       - get:
-          url: '/rides'
+          url: '/rides?page=1&limit=20'
       - get:
           url: '/rides/1'
