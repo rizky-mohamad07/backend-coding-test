@@ -8,9 +8,14 @@
   },
   "scripts": {
     "test": "mocha tests",
+    "coverage": "nyc --reporter=text npm run test",
+    "coverage-report": "nyc --reporter=html npm run test",
     "start": "node index.js",
     "serve-doc": "node serveDoc.js"
   },
+  "pre-push": [
+    "coverage"
+  ],
   "keywords": [
     "Xendit"
   ],
