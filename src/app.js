@@ -8,83 +8,15 @@ const bodyParser = require('body-parser');
 
 const jsonParser = bodyParser.json();
 
-module.exports = (db, logger) => {
+module.exports = (db, logger, validator, dbHelper) => {
   app.get('/health', (req, res) => res.send('Healthy'));
 
-  app.post('/rides', jsonParser, (req, res) => {
+  app.post('/rides', jsonParser, async (req, res) => {
     logger.info('POST /rides is called');
-    const startLatitude = Number(req.body.start_lat);
-    const startLongitude = Number(req.body.start_long);
-    const endLatitude = Number(req.body.end_lat);
-    const endLongitude = Number(req.body.end_long);
-    const riderName = req.body.rider_name;
-    const driverName = req.body.driver_name;
-    const driverVehicle = req.body.driver_vehicle;
-
-    if (
-      startLatitude < -90 ||
-      startLatitude > 90 ||
-      startLongitude < -180 ||
-      startLongitude > 180
-    ) {
-      logger.error({
-        error_code: 'VALIDATION_ERROR',
-        message:
-          'Start latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively'
-      });
-      return res.send({
-        error_code: 'VALIDATION_ERROR',
-        message:
-          'Start latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively'
-      });
+    const validateResult = await validator.validateRideData(req.body, logger);
+    if (validateResult !== '') {
+      return res.send(validateResult);
     }
-
-    if (endLatitude < -90 || endLatitude > 90 || endLongitude < -180 || endLongitude > 180) {
-      logger.error({
-        error_code: 'VALIDATION_ERROR',
-        message:
-          'End latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively'
-      });
-      return res.send({
-        error_code: 'VALIDATION_ERROR',
-        message:
-          'End latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively'
-      });
-    }
-
-    if (typeof riderName !== 'string' || riderName.length < 1) {
-      logger.error({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Rider name must be a non empty string'
-      });
-      return res.send({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Rider name must be a non empty string'
-      });
-    }
-
-    if (typeof driverName !== 'string' || driverName.length < 1) {
-      logger.error({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Driver name must be a non empty string'
-      });
-      return res.send({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Driver name must be a non empty string'
-      });
-    }
-
-    if (typeof driverVehicle !== 'string' || driverVehicle.length < 1) {
-      logger.error({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Driver vehicle must be a non empty string'
-      });
-      return res.send({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Driver vehicle must be a non empty string'
-      });
-    }
-
     const values = [
       req.body.start_lat,
       req.body.start_long,
@@ -95,149 +27,125 @@ module.exports = (db, logger) => {
       req.body.driver_vehicle
     ];
 
-    const result = db.run(
-      'INSERT INTO Rides(startLat, startLong, endLat, endLong, riderName, driverName, driverVehicle) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      values,
-      function(err) {
-        if (err) {
-          logger.error({
-            error_code: 'SERVER_ERROR',
-            message: 'Unknown error'
-          });
-          return res.send({
-            error_code: 'SERVER_ERROR',
-            message: 'Unknown error'
-          });
-        }
+    let insertRideResponse = '';
+    try {
+      const sql = `INSERT INTO Rides(startLat, startLong, endLat, endLong, riderName, driverName, driverVehicle) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      insertRideResponse = await dbHelper.runAsync(db, sql, values);
+    } catch (e) {
+      logger.error({
+        error_code: 'SERVER_ERROR',
+        message: 'Unknown Error'
+      });
+      return res.send({
+        error_code: 'SERVER_ERROR',
+        message: 'Unknown Error'
+      });
+    }
 
-        db.all('SELECT * FROM Rides WHERE rideID = ?', this.lastID, function(err, rows) {
-          if (err) {
-            logger.error({
-              error_code: 'SERVER_ERROR',
-              message: 'Unknown error'
-            });
-            return res.send({
-              error_code: 'SERVER_ERROR',
-              message: 'Unknown error'
-            });
-          }
-
-          res.send(rows);
-          logger.info('POST /rides is successfully finished');
-        });
-      }
-    );
+    let rideData = '';
+    try {
+      const sql = `SELECT * FROM Rides WHERE rideID = ?`;
+      rideData = await dbHelper.allAsync(db, sql, insertRideResponse.lastID);
+    } catch (e) {
+      logger.error({
+        error_code: 'SERVER_ERROR',
+        message: 'Unknown Error'
+      });
+      return res.send({
+        error_code: 'SERVER_ERROR',
+        message: 'Unknown Error'
+      });
+    }
+    res.send(rideData);
+    logger.info('POST /rides is successfully finished');
   });
 
-  app.get('/rides', (req, res) => {
+  app.get('/rides', async (req, res) => {
     logger.info('GET /rides is called');
+    const validateResult = await validator.validateRidePaginationParameter(req.query, logger);
+    if (validateResult !== '') {
+      return res.send(validateResult);
+    }
+
     const page = Number(req.query.page);
     const limit = Number(req.query.limit);
-    if (!page || page < 1) {
-      logger.error({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Page Parameter should be greater than 0'
-      });
-      return res.send({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Page Parameter should be greater than 0'
-      });
-    }
-
-    if (!limit || limit < 1 || limit >= 50) {
-      logger.error({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Limit Parameter should be between 1 and 50'
-      });
-      return res.send({
-        error_code: 'VALIDATION_ERROR',
-        message: 'Limit Parameter should be between 1 and 50'
-      });
-    }
     const offset = (page - 1) * limit;
     const values = [limit, offset];
-    db.all('SELECT * FROM Rides LIMIT ? OFFSET ?', values, function(err, rows) {
-      if (err) {
-        logger.error({
-          error_code: 'SERVER_ERROR',
-          message: 'Unknown error'
-        });
-        return res.send({
-          error_code: 'SERVER_ERROR',
-          message: 'Unknown error'
-        });
-      }
 
-      if (rows.length === 0) {
-        logger.error({
-          error_code: 'RIDES_NOT_FOUND_ERROR',
-          message: 'Could not find any rides'
-        });
-        return res.send({
-          error_code: 'RIDES_NOT_FOUND_ERROR',
-          message: 'Could not find any rides'
-        });
-      }
-      db.all('SELECT COUNT(*) as TotalCount FROM Rides', function(err, totalCount) {
-        if (err) {
-          logger.error({
-            error_code: 'SERVER_ERROR',
-            message: 'Unknown error'
-          });
-          return res.send({
-            error_code: 'SERVER_ERROR',
-            message: 'Unknown error'
-          });
-        }
-        if (totalCount.length === 0) {
-          logger.error({
-            error_code: 'TOTAL_RIDES_COUNT_ERROR',
-            message: 'Failed fetching total rides count data'
-          });
-          return res.send({
-            error_code: 'RIDES_NOT_FOUND_ERROR',
-            message: 'Failed fetching total rides count data'
-          });
-        }
-        const response = {
-          page: req.query.page,
-          limit: req.query.limit,
-          count: totalCount[0].TotalCount,
-          data: rows
-        };
-        res.send(response);
-        logger.info('GET /rides is successfully finished');
+    let ridesData = '';
+    try {
+      const sql = `SELECT * FROM Rides LIMIT ? OFFSET ?`;
+      ridesData = await dbHelper.allAsync(db, sql, values);
+    } catch (e) {
+      logger.error({
+        error_code: 'SERVER_ERROR',
+        message: 'Unknown Error'
       });
-    });
+    }
+    if (ridesData.length === 0) {
+      logger.error({
+        error_code: 'RIDES_NOT_FOUND_ERROR',
+        message: 'Could not find any rides'
+      });
+      return res.send({
+        error_code: 'RIDES_NOT_FOUND_ERROR',
+        message: 'Could not find any rides'
+      });
+    }
+    let ridesCount = '';
+    try {
+      const sql = `SELECT COUNT(*) as TotalCount FROM Rides`;
+      ridesCount = await dbHelper.allAsync(db, sql);
+    } catch (e) {
+      logger.error({
+        error_code: 'SERVER_ERROR',
+        message: 'Unknown Error'
+      });
+    }
+    if (ridesCount.length === 0) {
+      logger.error({
+        error_code: 'TOTAL_RIDES_COUNT_ERROR',
+        message: 'Failed fetching total rides count data'
+      });
+      return res.send({
+        error_code: 'RIDES_NOT_FOUND_ERROR',
+        message: 'Failed fetching total rides count data'
+      });
+    }
+    const response = {
+      page: req.query.page,
+      limit: req.query.limit,
+      count: ridesCount[0].TotalCount,
+      data: ridesData
+    };
+    res.send(response);
+    logger.info('GET /rides is successfully finished');
   });
 
-  app.get('/rides/:id', (req, res) => {
+  app.get('/rides/:id', async (req, res) => {
     logger.info('GET /rides/{id} is called');
-    db.all(`SELECT * FROM Rides WHERE rideID='${req.params.id}'`, function(err, rows) {
-      if (err) {
-        logger.error({
-          error_code: 'SERVER_ERROR',
-          message: 'Unknown error'
-        });
-        return res.send({
-          error_code: 'SERVER_ERROR',
-          message: 'Unknown error'
-        });
-      }
-
-      if (rows.length === 0) {
-        logger.error({
-          error_code: 'RIDES_NOT_FOUND_ERROR',
-          message: 'Could not find any rides'
-        });
-        return res.send({
-          error_code: 'RIDES_NOT_FOUND_ERROR',
-          message: 'Could not find any rides'
-        });
-      }
-      res.send(rows);
-      logger.info('GET rides/{id} successfully finished');
-    });
+    let rideData = '';
+    try {
+      const sql = `SELECT * FROM Rides WHERE rideID='${req.params.id}'`;
+      rideData = await dbHelper.allAsync(db, sql);
+    } catch (e) {
+      logger.error({
+        error_code: 'SERVER_ERROR',
+        message: 'Unknown Error'
+      });
+    }
+    if (rideData.length === 0) {
+      logger.error({
+        error_code: 'RIDES_NOT_FOUND_ERROR',
+        message: 'Could not find any rides'
+      });
+      return res.send({
+        error_code: 'RIDES_NOT_FOUND_ERROR',
+        message: 'Could not find any rides'
+      });
+    }
+    res.send(rideData);
+    logger.info('GET rides/{id} successfully finished');
   });
 
   return app;

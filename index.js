@@ -9,17 +9,19 @@ const bodyParser = require('body-parser');
 
 const jsonParser = bodyParser.json();
 
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(':memory:');
+const sqlite = require('sqlite3').verbose();
+const db = new sqlite.Database(':memory:');
 
 const buildSchemas = require('./src/schemas');
 
 const logger = require('./src/logger');
+const validator = require('./src/helper/validator');
+const dbHelper = require('./src/helper/dbHelper');
 
 db.serialize(() => {
   buildSchemas(db);
 
-  const app = require('./src/app')(db, logger);
+  const app = require('./src/app')(db, logger, validator, dbHelper);
 
   app.listen(port, () => logger.info(`Rides API Service started and listening on port ${port}`));
 });
