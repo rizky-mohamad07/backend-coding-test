@@ -78,6 +78,9 @@ Please implement pagination to retrieve pages of the resource `rides`.
    3. Documentation
 2. Merge the pull request
 
+Solution :
+Implemented the pagination utilizing 2 SQL query. one for the Rides data and one for the Total Count of Rides
+
 ### Refactoring
 
 Please implement the following refactors of the code:

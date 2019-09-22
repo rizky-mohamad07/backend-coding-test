@@ -31,9 +31,23 @@ describe('API tests', () => {
   });
 
   describe('GET /rides Negative Flow', () => {
-    it('respond with empty rides data', done => {
+    it('respond with invalid parameters error', done => {
       request(app)
         .get('/rides')
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200, done);
+    });
+    it('respond with invalid limit parameter error', done => {
+      request(app)
+        .get('/rides?page=1')
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200, done);
+    });
+    it('respond with empty rides data', done => {
+      request(app)
+        .get('/rides?page=1&limit=1')
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done);
@@ -149,7 +163,7 @@ describe('API tests', () => {
   describe('GET /rides Positive Flow', () => {
     it('respond with json containing a list of all rides', done => {
       request(app)
-        .get('/rides')
+        .get('/rides?page=1&limit=1')
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done);
