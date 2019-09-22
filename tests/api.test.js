@@ -5,9 +5,41 @@ const request = require('supertest');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database(':memory:');
 const logger = require('../src/logger');
-const app = require('../src/app')(db, logger);
+const dbHelper = require('../src/helper/dbHelper');
+const validator = require('../src/helper/validator');
+const app = require('../src/app')(db, logger, validator, dbHelper);
 const buildSchemas = require('../src/schemas');
 
+describe('API without DB tests', () => {
+  describe('GET /rides/{id} without DB', () => {
+    it('respond with SERVER_ERROR', done => {
+      request(app)
+        .get('/rides/1')
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200, done);
+    });
+  });
+  describe('POST /rides without DB', () => {
+    const data = {
+      start_lat: 10,
+      start_long: 10,
+      end_lat: 10,
+      end_long: 10,
+      rider_name: 'Rizky',
+      driver_name: 'Eddy',
+      driver_vehicle: 'Yamaha'
+    };
+    it('respond with SERVER_ERROR', done => {
+      request(app)
+        .post('/rides')
+        .send(data)
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200, done);
+    });
+  });
+});
 describe('API tests', () => {
   before(done => {
     db.serialize(err => {
