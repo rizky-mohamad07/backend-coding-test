@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const helmet = require('helmet');
 
 const app = express();
 
@@ -9,6 +10,8 @@ const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
 
 module.exports = (db, logger, validator, dbHelper) => {
+  app.use(helmet());
+
   app.get('/health', (req, res) => res.send('Healthy'));
 
   app.post('/rides', jsonParser, async (req, res) => {
