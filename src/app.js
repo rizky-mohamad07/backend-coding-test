@@ -131,7 +131,32 @@ module.exports = (db, logger) => {
 
   app.get('/rides', (req, res) => {
     logger.info('GET /rides is called');
-    db.all('SELECT * FROM Rides', function(err, rows) {
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+    if (!page || page < 1) {
+      logger.error({
+        error_code: 'VALIDATION_ERROR',
+        message: 'Page Parameter should be greater than 0'
+      });
+      return res.send({
+        error_code: 'VALIDATION_ERROR',
+        message: 'Page Parameter should be greater than 0'
+      });
+    }
+
+    if (!limit || limit < 1 || limit >= 50) {
+      logger.error({
+        error_code: 'VALIDATION_ERROR',
+        message: 'Limit Parameter should be between 1 and 50'
+      });
+      return res.send({
+        error_code: 'VALIDATION_ERROR',
+        message: 'Limit Parameter should be between 1 and 50'
+      });
+    }
+    const offset = (page - 1) * limit;
+    const values = [limit, offset];
+    db.all('SELECT * FROM Rides LIMIT ? OFFSET ?', values, function(err, rows) {
       if (err) {
         logger.error({
           error_code: 'SERVER_ERROR',
@@ -153,15 +178,42 @@ module.exports = (db, logger) => {
           message: 'Could not find any rides'
         });
       }
-
-      res.send(rows);
-      logger.info('GET /rides is successfully finished');
+      db.all('SELECT COUNT(*) as TotalCount FROM Rides', function(err, totalCount) {
+        if (err) {
+          logger.error({
+            error_code: 'SERVER_ERROR',
+            message: 'Unknown error'
+          });
+          return res.send({
+            error_code: 'SERVER_ERROR',
+            message: 'Unknown error'
+          });
+        }
+        if (totalCount.length === 0) {
+          logger.error({
+            error_code: 'TOTAL_RIDES_COUNT_ERROR',
+            message: 'Failed fetching total rides count data'
+          });
+          return res.send({
+            error_code: 'RIDES_NOT_FOUND_ERROR',
+            message: 'Failed fetching total rides count data'
+          });
+        }
+        const response = {
+          page: req.query.page,
+          limit: req.query.limit,
+          count: totalCount[0].TotalCount,
+          data: rows
+        };
+        res.send(response);
+        logger.info('GET /rides is successfully finished');
+      });
     });
   });
 
   app.get('/rides/:id', (req, res) => {
     logger.info('GET /rides/{id} is called');
-    db.all(`SELECT * FROM rides WHERE rideID='${req.params.id}'`, function(err, rows) {
+    db.all(`SELECT * FROM Rides WHERE rideID='${req.params.id}'`, function(err, rows) {
       if (err) {
         logger.error({
           error_code: 'SERVER_ERROR',
