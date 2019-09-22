@@ -124,10 +124,11 @@ module.exports = (db, logger, validator, dbHelper) => {
 
   app.get('/rides/:id', async (req, res) => {
     logger.info('GET /rides/{id} is called');
+    const rideId = Number(req.params.id);
     let rideData = '';
     try {
-      const sql = `SELECT * FROM Rides WHERE rideID='${req.params.id}'`;
-      rideData = await dbHelper.allAsync(db, sql);
+      const sql = `SELECT * FROM Rides WHERE rideID=?`;
+      rideData = await dbHelper.allAsync(db, sql, rideId);
     } catch (e) {
       logger.error({
         error_code: 'SERVER_ERROR',
