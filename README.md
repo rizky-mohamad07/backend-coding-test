@@ -127,3 +127,12 @@ Please implement load testing to ensure your service can handle a high amount of
    1. Create a PR against `master` of your fork including artillery
    2. Ensure that load testing is able to be run using `npm test:load`. You can consider using a tool like `forever` to spin up a daemon and kill it after the load test has completed.
    3. Test all endpoints under at least `100 rps` for `30s` and ensure that `p99` is under `50ms`
+
+Solution :
+Added Artillery Load testing configuration for all endpoints
+Utilized npm-run-all to run the load testing processes sequentially with this order :
+
+1. Start Service with Forever
+2. Start Load Testing with Artillery
+3. Start Generating Load Testing Report with Artillery
+4. Stop all Forever process
